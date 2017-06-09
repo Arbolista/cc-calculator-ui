@@ -8,7 +8,7 @@ import { addUser, loginUser, loginUserFacebook, logoutUser, forgotPassword, need
 import { setLocalStorageItem, getLocalStorageItem, tokenIsValid } from 'shared/lib/utils/utils';
 import { signup, login, loginFacebook, loggedIn, signedUp, logout, loggedOut,
   requestNewPassword, newPasswordRequested, authError, processActivation, verifyActivation,
-  activationError, sendEmailConfirmation, resetPassword, resetPasswordSuccess, resetPasswordError } from './auth.actions';
+  activationError, sendEmailConfirmation, resetPassword, resetPasswordSuccess, resetPasswordError, storeCompetitionSession } from './auth.actions';
 import { updatedFootprintComputed } from '../user_footprint/user_footprint.actions';
 import { averageFootprintResetRequested } from '../average_footprint/average_footprint.actions';
 import { pushAlert } from '../ui/ui.actions';
@@ -20,6 +20,10 @@ import { pushAlert } from '../ui/ui.actions';
         name: undefined,
         answers: undefined,
         user_id: undefined
+      },
+      competition_data: {
+        token: undefined,
+        userId: undefined,
       },
       loading: false,
       load_error: false,
@@ -361,6 +365,18 @@ const ACTIONS = {
       fromJS(updated),
       Effects.constant(pushAlert(alert)),
     );
+  },
+
+  [storeCompetitionSession]: (state, sessionData) => {
+    if (tokenIsValid(sessionData.token)) {
+      setLocalStorageItem('competition_auth', sessionData);
+
+      const updated = state.setIn(['competition_data', 'token'], sessionData.token)
+                      .setIn(['competition_data', 'userId'], sessionData.user_id);
+
+      return fromJS(updated);
+    }
+    return state;
   },
 
 };

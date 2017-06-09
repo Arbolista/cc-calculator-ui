@@ -17,8 +17,9 @@ const sendEmailConfirmation = createAction('Send confirmation');
 const resetPassword = createAction('Reset password');
 const resetPasswordSuccess = createAction('Reset password successfully');
 const resetPasswordError = createAction('Reset password error');
+const storeCompetitionSession = createAction('Store session passed from Competition UI');
 
 export { signup, login, loginFacebook, loggedIn, signedUp, logout, loggedOut,
   requestNewPassword, newPasswordRequested, authError, processActivation,
   verifyActivation, activationError, sendEmailConfirmation,
-  resetPassword, resetPasswordSuccess, resetPasswordError };
+  resetPassword, resetPasswordSuccess, resetPasswordError, storeCompetitionSession };

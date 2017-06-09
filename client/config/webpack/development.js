@@ -75,6 +75,7 @@ module.exports = {
       'process.env.NODE_ENV': '"development"',
       NODE_ENV: '"development"',
       API_BASE_URL: `"${process.env.API_BASE_URL}"`,
+      COMPETITION_BASE_URL: `"${process.env.COMPETITION_BASE_URL}"`,
       APP_ID: `"${process.env.APP_ID}"`,
     }),
   ],

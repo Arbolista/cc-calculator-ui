@@ -10,9 +10,11 @@ process.env.APP_ID = '651280398386350';
 
 if (argv.local_api) {
   process.env.API_BASE_URL = 'http://localhost:8082';
+  process.env.COMPETITION_BASE_URL = 'http://localhost:9090/v1';
 } else {
   // This assumes a proxy intercept requests and divert to cc-user-api app.
   process.env.API_BASE_URL = 'https://calculator.coolclimatenetwork.net';
+  process.env.COMPETITION_BASE_URL = 'https://competition.coolclimatenetwork.net:9090/v1';
 }
 
 export default function build(options, done) {

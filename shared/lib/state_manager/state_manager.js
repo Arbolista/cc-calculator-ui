@@ -58,6 +58,10 @@ export default class StateManager {
     return getLocalStorageItem('auth');
   }
 
+  get competition_auth_storage() {
+    return getLocalStorageItem('competition_auth');
+  }
+
   get ui_storage() {
     if (!getLocalStorageItem('ui')) return 0;
     return Object.assign({}, getLocalStorageItem('ui'), { external_offset: {}, connect_to_api: true });
@@ -120,6 +124,7 @@ export default class StateManager {
     return Object.assign({
       auth: fromJS({
         data: state_manager.auth_storage || {},
+        competition_data: state_manager.competition_auth_storage || {},
         canReset: true,
       }),
       average_footprint: fromJS({
