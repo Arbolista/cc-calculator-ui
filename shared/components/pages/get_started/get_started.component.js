@@ -4,7 +4,7 @@ import React from 'react';
 import Panel from 'shared/lib/base_classes/panel';
 import SnapSlider from 'd3-object-charts/src/slider/snap_slider';
 import CalculatorApi from 'api/calculator.api';
-import { setLocation } from 'api/user.api';
+import { updateUser } from 'api/competition.api';
 import footprintContainer, { footprintPropTypes } from 'shared/containers/footprint.container';
 import template from './get_started.rt.html';
 
@@ -203,7 +203,7 @@ class GetStartedComponent extends Panel {
     const user_location = location;
 
     user_location.country = 'us';
-    return setLocation(user_location, token);
+    return updateUser({ location: user_location }, token);
   }
 
   // called when input_location input changed.

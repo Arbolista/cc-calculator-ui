@@ -40,8 +40,8 @@
               </div>
             </div>
           </div>
-          <div class="introduction" rt-class="{'not-set': !this.getProfileData('intro') && !this.is_own_editable_profile}">
-            {this.getProfileData('intro') || 'Fill in your personal introduction here..'}
+          <div class="introduction" rt-class="{'not-set': !this.introduction && !this.is_own_editable_profile}">
+            {this.introduction || 'Fill in your personal introduction here..'}
           </div>
           <a rt-if="this.is_own_editable_profile" onClick="{this.triggerEdit.bind(this)}" class="action-btn">
             {this.t('Edit')}
@@ -51,7 +51,7 @@
           <div class="form-group">
             <label for="facebookInput">Facebook</label>
             <div class="input-group">
-              <div class="input-group-addon">http://facebook.com/</div>
+              <div class="input-group-addon">https://facebook.com/</div>
               <input type="text"
                 class="form-control"
                 id="facebookInput"
@@ -64,7 +64,7 @@
           <div class="form-group">
             <label for="twitterInput">Twitter</label>
             <div class="input-group">
-              <div class="input-group-addon">http://twitter.com/</div>
+              <div class="input-group-addon">https://twitter.com/</div>
               <input type="text"
                 class="form-control"
                 id="twitterInput"
@@ -77,7 +77,7 @@
           <div class="form-group">
             <label for="instagramInput">Instagram</label>
             <div class="input-group">
-              <div class="input-group-addon">http://instagram.com/</div>
+              <div class="input-group-addon">https://instagram.com/</div>
               <input type="text"
                 class="form-control"
                 id="instagramInput"
@@ -90,7 +90,7 @@
           <div class="form-group">
             <label for="linkedinInput">LinkedIn</label>
             <div class="input-group">
-              <div class="input-group-addon">http://linkedin.com/</div>
+              <div class="input-group-addon">https://linkedin.com/</div>
               <input type="text"
                 class="form-control"
                 id="linkedinInput"
@@ -103,7 +103,7 @@
           <div class="form-group">
             <label for="mediumInput">Medium</label>
             <div class="input-group">
-              <div class="input-group-addon">http://medium.com/</div>
+              <div class="input-group-addon">https://medium.com/</div>
               <input type="text"
                 class="form-control"
                 id="mediumInput"
@@ -146,11 +146,11 @@
           <tr rt-if="!this.user_goals" class="danger"><td></td><td>{this.t('profile.none_pledged')}</td><td></td><td></td><td></td><td></td><td></td></tr>
           <tr rt-repeat="action in this.user_goals" key={actionIndex} rt-class="{'success': action.status === 'completed', 'info': action.status === 'already_done', 'warning': action.status === 'pledged'}">
             <td><i class="fa fa-{this.getCategoryIcon(action.key)}" aria-hidden="true" title="Category"></i></td>
-            <td>{this.displayActionTitle(action.key)}</td>
+            <td>{this.displayActionTitle(action.calculatorKey)}</td>
             <td>{this.displayActionStatus(action.status)}</td>
-            <td>{action.tons_saved}</td>
-            <td>${this.displayActionDollarsSaved(action.dollars_saved)}</td>
-            <td>${this.displayActionUpfrontCost(action.upfront_cost)}</td>
+            <td>{action.savings.tonsSaved}</td>
+            <td>${this.displayActionDollarsSaved(action.savings.dollarsSaved)}</td>
+            <td>${this.displayActionUpfrontCost(action.savings.upfrontCost)}</td>
             <td>
               <button rt-if="this.user_authenticated" class="btn btn-default" rt-class="{'completed': action.status === 'completed' || action.status === 'already_done'}" onClick="{this.toggleActionComplete.bind(this, action)}"><i class="fa fa-check" aria-hidden="true"></i></button>
               <button rt-if="!this.user_authenticated" class="btn btn-default btn-disabled" rt-class="{'completed': action.status === 'completed'}"><i class="fa fa-check" aria-hidden="true"></i></button>

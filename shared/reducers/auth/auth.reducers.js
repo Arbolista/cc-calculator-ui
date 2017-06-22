@@ -4,12 +4,12 @@ import { fromJS } from 'immutable';
 import { loop, Effects } from 'redux-loop';
 import { createReducer } from 'redux-act';
 
-import { addUser, loginUser, loginUserFacebook, logoutUser, forgotPassword, needActivate, sendConfirmation, changePassword } from 'api/user.api';
+import { addUser, loginUser, loginUserFacebook, logoutUser, forgotPassword, changePassword, updateUser } from 'api/competition.api';
 import { setLocalStorageItem, getLocalStorageItem, tokenIsValid } from 'shared/lib/utils/utils';
 import { signup, login, loginFacebook, loggedIn, signedUp, logout, loggedOut,
   requestNewPassword, newPasswordRequested, authError, processActivation, verifyActivation,
-  activationError, sendEmailConfirmation, resetPassword, resetPasswordSuccess, resetPasswordError } from './auth.actions';
-import { updatedFootprintComputed } from '../user_footprint/user_footprint.actions';
+  activationError, sendEmailConfirmation, resetPassword, resetPasswordSuccess, resetPasswordError, storeCompetitionSession, acceptTerms, acceptTermsSuccess, acceptTermsError } from './auth.actions';
+import { updatedFootprintComputed, updateRemoteUserAnswers } from '../user_footprint/user_footprint.actions';
 import { averageFootprintResetRequested } from '../average_footprint/average_footprint.actions';
 import { pushAlert } from '../ui/ui.actions';
 
@@ -20,6 +20,10 @@ import { pushAlert } from '../ui/ui.actions';
         name: undefined,
         answers: undefined,
         user_id: undefined
+      },
+      competition_data: {
+        token: undefined,
+        userId: undefined,
       },
       loading: false,
       load_error: false,
@@ -52,129 +56,73 @@ const ACTIONS = {
     ),
 
   [loggedIn]: (state, api_response) => {
-    if (api_response.success) {
-      const auth = {
-        token: api_response.data.token,
-        name: api_response.data.name,
-        user_id: api_response.data.user_id,
-      };
-      const remote_answers = JSON.parse(api_response.data.answers);
+    const auth = {
+      token: api_response.token,
+      user_id: api_response.userId,
+    };
 
-      setLocalStorageItem('auth', auth);
+    setLocalStorageItem('auth', auth);
 
-      const updated = state.setIn(['data', 'token'], auth.token)
-                         .setIn(['data', 'name'], auth.name)
-                         .setIn(['data', 'user_id'], auth.user_id)
-                         .set('loading', false)
-                         .set('received', true)
-                         .set('success', true);
-
-      const alert = {
-        id: 'shared',
-        data: [{
-          needs_i18n: true,
-          type: 'success',
-          message: 'success.login',
-        }],
-      };
-
-      if (Object.keys(remote_answers).length !== 0) {
-        return loop(
-          fromJS(updated),
-          Effects.batch([
-            Effects.constant(pushAlert(alert)),
-            Effects.constant(updatedFootprintComputed(remote_answers)),
-            // Effects.constant(verifyActivation()),
-          ]),
-        );
-      }
-      return loop(
-        fromJS(updated),
-        Effects.batch([
-          Effects.constant(pushAlert(alert)),
-          // Effects.constant(verifyActivation()),
-        ]),
-      );
-    }
-
-    const err = JSON.parse(api_response.error);
-
-    const updated = state.set('loading', false)
+    const updated = state.setIn(['data', 'token'], auth.token)
+                       .setIn(['data', 'user_id'], auth.user_id)
+                       .set('loading', false)
                        .set('received', true)
-                       .set('success', false);
+                       .set('success', true);
 
     const alert = {
-      id: 'login',
+      id: 'shared',
       data: [{
         needs_i18n: true,
-        type: 'danger',
-        message: `errors.${Object.keys(err)[0]}.${Object.values(err)[0]}`,
+        type: 'success',
+        message: 'success.login',
+      }],
+    };
+
+    const effects = [Effects.constant(pushAlert(alert))];
+
+    if (!api_response.termsAccepted) {
+      const termsAlert = {
+        id: 'acceptTerms',
+        data: [{
+          needs_i18n: true,
+          type: 'danger',
+          message: 'sign_up.termsNotAccepted',
+          actions: [{
+            text: 'Yes, I accept the terms of use.',
+            action: 'acceptTerms',
+          }],
+        }],
+      };
+      effects.push(Effects.constant(pushAlert(termsAlert)));
+    }
+
+    if ({}.hasOwnProperty.call(api_response, 'calculatorAnswers') && Object.keys(api_response.calculatorAnswers).length > 0) {
+      effects.push(Effects.constant(updatedFootprintComputed(api_response.calculatorAnswers)));
+    } else {
+      effects.push(Effects.constant(updateRemoteUserAnswers()));
+    }
+
+    return loop(
+      fromJS(updated),
+      Effects.batch(effects),
+    );
+  },
+
+  [signedUp]: (state) => {
+    const alert = {
+      id: 'shared',
+      data: [{
+        needs_i18n: true,
+        type: 'success',
+        message: 'success.sign_up',
       }],
     };
 
     return loop(
-      fromJS(updated),
-      Effects.constant(pushAlert(alert)),
-    );
-  },
-
-  [signedUp]: (state, api_response) => {
-    let updated;
-    let alert;
-
-    if (api_response.success) {
-      const auth = {
-        token: api_response.data.token,
-        name: api_response.data.name,
-        user_id: api_response.data.user_id,
-      };
-
-      setLocalStorageItem('auth', auth);
-
-      updated = state.setIn(['data', 'token'], auth.token)
-                     .setIn(['data', 'name'], auth.name)
-                     .setIn(['data', 'user_id'], auth.user_id)
-                     .set('loading', false)
-                     .set('received', true)
-                     .set('success', true);
-
-      alert = {
-        id: 'shared',
-        data: [{
-          needs_i18n: true,
-          type: 'success',
-          message: 'success.sign_up',
-        }],
-      };
-    } else {
-      let err;
-      alert = {
-        id: 'sign_up',
-        data: [],
-      };
-
-      try {
-        err = JSON.parse(api_response.error);
-        alert.data.push({
-          needs_i18n: true,
-          type: 'danger',
-          message: `errors.${Object.keys(err)[0]}.${Object.values(err)[0]}`,
-        });
-      } catch (error) {
-        alert.data.push({
-          needs_i18n: true,
-          type: 'danger',
-          message: 'errors.email.non-unique',
-        });
-      }
-
-      updated = state.set('loading', false)
-                     .set('received', true)
-                     .set('success', false);
-    }
-
-    return loop(
-     fromJS(updated),
+     state.set('loading', false)
+          .set('received', true)
+          .set('success', true)
+          .set('signed_up', true),
      Effects.constant(pushAlert(alert)),
     );
   },
@@ -186,33 +134,29 @@ const ACTIONS = {
         .catch(authError)),
   ),
 
-  [loggedOut]: (state, api_response) => {
-    if (api_response.success) {
-      localStorage.removeItem('auth');
-      const updated = state.deleteIn(['data', 'token'])
-                           .deleteIn(['data', 'name'])
-                           .deleteIn(['data', 'user_id'])
-                           .set('loading', false)
-                           .delete('received')
-                           .delete('success');
-      const alert = {
-        id: 'shared',
-        data: [{
-          needs_i18n: true,
-          type: 'success',
-          message: 'success.logout',
-        }],
-      };
+  [loggedOut]: (state) => {
+    localStorage.removeItem('auth');
+    const updated = state.deleteIn(['data', 'token'])
+                         .deleteIn(['data', 'user_id'])
+                         .set('loading', false)
+                         .delete('received')
+                         .delete('success');
+    const alert = {
+      id: 'shared',
+      data: [{
+        needs_i18n: true,
+        type: 'success',
+        message: 'success.logout',
+      }],
+    };
 
-      return loop(
-        fromJS(updated),
-        Effects.batch([
-          Effects.constant(averageFootprintResetRequested()),
-          Effects.constant(pushAlert(alert)),
-        ]),
-      );
-    }
-    return state;
+    return loop(
+      fromJS(updated),
+      Effects.batch([
+        Effects.constant(averageFootprintResetRequested()),
+        Effects.constant(pushAlert(alert)),
+      ]),
+    );
   },
 
   [requestNewPassword]: (state, payload) => loop(
@@ -222,35 +166,52 @@ const ACTIONS = {
           .catch(authError)),
     ),
 
-  [newPasswordRequested]: (state, api_response) => {
-    const updated = state.set('loading', false)
-                       .set('received', true);
+  [newPasswordRequested]: (state) => {
     const alert = {
       id: 'forgot_password',
-    };
-
-    if (api_response.success) {
-      alert.data = [{
+      data: [{
         needs_i18n: true,
         type: 'info',
         message: 'success.forgot_password',
-      }];
-    } else {
-      const err = JSON.parse(api_response.error);
-      alert.data = [{
-        needs_i18n: true,
-        type: 'danger',
-        message: `errors.${Object.keys(err)[0]}.${Object.values(err)[0]}`,
-      }];
-    }
+      }],
+    };
 
     return loop(
-      fromJS(updated),
+      state.set('loading', false)
+           .set('received', true),
       Effects.constant(pushAlert(alert)),
     );
   },
 
-  [authError]: state => state.set('success', false),
+  [authError]: (state, api_response) => {
+    let errorCode;
+    const ok = api_response.body !== null;
+
+    if (api_response.body) {
+      if (api_response.body.code) {
+        errorCode = api_response.body.code;
+      } else errorCode = `${api_response.op}Failed.fail`;
+    } else if (api_response.status === 404) errorCode = `${api_response.op}Failed.non-existent`;
+    else errorCode = `${api_response.op}Failed.fail`;
+
+    const alert = {
+      id: api_response.op,
+      data: [{
+        needs_i18n: true,
+        type: 'danger',
+        message: `errors.${errorCode}`,
+      }],
+    };
+
+    if (ok && api_response.body.field) alert.data[0].message = `${alert.data[0].message}.${api_response.body.field}`;
+
+    return loop(
+      state.set('loading', false)
+           .set('received', true)
+           .set('success', false),
+      Effects.constant(pushAlert(alert)),
+    );
+  },
 
   [sendEmailConfirmation]: (state) => {
     const auth_status = getLocalStorageItem('auth');
@@ -328,40 +289,65 @@ const ACTIONS = {
                                       .set('canReset', false),
 
   [resetPasswordSuccess]: (state, api_response) => {
-    const updated = state.set('loading', false)
-                           .set('canReset', false);
-    if (api_response.success) {
-      const alert = {
-        id: 'shared',
-        data: [{
-          needs_i18n: true,
-          type: 'success',
-          message: 'reset.confirm',
-        }],
-      };
-
-      return loop(
-        fromJS(updated),
-        Effects.constant(pushAlert(alert)),
-      );
-    }
-
-    const err = JSON.parse(api_response.error);
-
     const alert = {
       id: 'shared',
       data: [{
         needs_i18n: true,
-        type: 'danger',
-        message: `errors.${Object.keys(err)[0]}.${Object.values(err)[0]}`,
+        type: 'success',
+        message: 'reset.confirm',
       }],
     };
 
     return loop(
-      fromJS(updated),
+      state.set('loading', false)
+           .set('canReset', false),
       Effects.constant(pushAlert(alert)),
     );
   },
+
+  [storeCompetitionSession]: (state, sessionData) => {
+    if (tokenIsValid(sessionData.token)) {
+      setLocalStorageItem('competition_auth', sessionData);
+
+      return state.setIn(['competition_data', 'token'], sessionData.token)
+                  .setIn(['competition_data', 'userId'], sessionData.user_id);
+    }
+    return state;
+  },
+
+  [acceptTerms]: (state) => {
+    const auth_status = getLocalStorageItem('auth');
+    if ({}.hasOwnProperty.call(auth_status, 'token')) {
+      if (tokenIsValid(auth_status.token)) {
+        return loop(
+          state.set('loading', true),
+          Effects.promise(() => updateUser({ termsAccepted: 'true' }, auth_status.token)
+              .then(acceptTermsSuccess)
+              .catch(acceptTermsError)),
+        );
+      }
+    }
+    return fromJS(state);
+  },
+
+  [acceptTermsSuccess]: (state) => {
+    const alert = {
+      id: 'shared',
+      data: [{
+        needs_i18n: true,
+        type: 'success',
+        message: 'success.termsAcceptedNow',
+      }],
+    };
+
+    return loop(
+      state.set('loading', false),
+      Effects.constant(pushAlert(alert)),
+    );
+  },
+
+  [acceptTermsError]: state => state.set('loading', false)
+                                    .set('success', false),
 
 };
 

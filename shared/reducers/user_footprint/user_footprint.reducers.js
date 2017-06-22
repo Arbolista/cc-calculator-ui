@@ -3,7 +3,7 @@ import { loop, Effects } from 'redux-loop';
 import { createReducer } from 'redux-act';
 
 import CalculatorApi from 'api/calculator.api';
-import { updateAnswers, updateUserGoals } from 'api/user.api';
+import { updateCalculatorGoal, updateCalculatorAnswers } from 'api/competition.api';
 import { setLocalStorageItem, getLocalStorageItem, tokenIsValid } from 'shared/lib/utils/utils';
 import { ensureFootprintComputed, footprintRetrieved, userFootprintError, parseFootprintResult, parseTakeactionResult, userFootprintUpdated, userFootprintReset, updatedFootprintComputed, updateTakeactionResult, updateRemoteUserAnswers, updateActionStatus, updateRemoteUserActions } from './user_footprint.actions';
 
@@ -163,11 +163,12 @@ const ACTIONS = {
     ),
 
   [updateRemoteUserAnswers]: (state) => {
-    const auth_status = getLocalStorageItem('auth');
+    let auth = getLocalStorageItem('auth');
+    if (getLocalStorageItem('competition_auth')) auth = getLocalStorageItem('competition_auth');
 
-    if ({}.hasOwnProperty.call(auth_status, 'token')) {
-      if (tokenIsValid(auth_status.token)) {
-        updateAnswers(state.get('data').toJS(), auth_status.token);
+    if ({}.hasOwnProperty.call(auth, 'token')) {
+      if (tokenIsValid(auth.token)) {
+        updateCalculatorAnswers(state.get('data').toJS(), auth.token);
       }
     }
     return fromJS(state);
@@ -235,11 +236,32 @@ const ACTIONS = {
   },
 
   [updateRemoteUserActions]: (state, updated_action) => {
-    const auth_status = getLocalStorageItem('auth');
+    let auth = getLocalStorageItem('auth');
+    if (getLocalStorageItem('competition_auth')) auth = getLocalStorageItem('competition_auth');
 
-    if ({}.hasOwnProperty.call(auth_status, 'token')) {
-      if (tokenIsValid(auth_status.token)) {
-        updateUserGoals(updated_action, auth_status.token);
+    if ({}.hasOwnProperty.call(auth, 'token')) {
+      if (tokenIsValid(auth.token)) {
+        let status;
+        if (updated_action.status === 'pledged' || updated_action.status === 'completed' || updated_action.status === 'not_relevant' || updated_action.status === 'already_done') {
+          status = updated_action.status;
+        } else {
+          status = '';
+        }
+        let body = {
+          calculatorKey: updated_action.key,
+          status,
+        };
+
+        if ({}.hasOwnProperty.call(updated_action, 'details')) {
+          const savings = {
+            dollarsSaved: updated_action.details.dollars_saved,
+            tonsSaved: updated_action.details.tons_saved,
+            upfrontCost: updated_action.details.upfront_cost,
+          };
+          body = Object.assign(body, { savings });
+        }
+
+        updateCalculatorGoal(body, auth.token);
       }
     }
     return fromJS(state);

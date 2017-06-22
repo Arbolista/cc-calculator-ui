@@ -3,8 +3,8 @@
       key="{alertIndex}"
       rt-class="{'alert-success': alert.type === 'success', 'alert-danger': alert.type === 'danger'}"
       rt-repeat="alert in this.props.list">
-      {this.translateAlert(alert)} 
-      <a key="{actionIndex}" href="#" onClick="() => this.alertAction(action.action)" class="alert-link" rt-repeat="action in alert.actions">
-      	 {action.text} </a> 
+      <p>{this.translateAlert(alert)}</p>
+      <p><a key="{actionIndex}" href="#" onClick="() => this.alertAction(action.action)" class="alert-link" rt-repeat="action in alert.actions">
+      	 {action.text} </a></p>
     </div>
 </div>

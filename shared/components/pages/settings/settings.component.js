@@ -31,6 +31,10 @@ class SettingsComponent extends Panel {
     return this.props.auth.getIn(['data', 'user_id']);
   }
 
+  get signed_up() {
+    return this.props.auth.has('signed_up') && this.props.auth.get('signed_up');
+  }
+
   viewProfile() {
     this.goToProfile(this.user_id);
   }

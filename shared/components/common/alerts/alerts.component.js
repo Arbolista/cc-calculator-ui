@@ -23,6 +23,8 @@ class AlertsComponent extends Translatable {
   alertAction(action) {
     if (action === 'confirmAccount') {
       this.props.confirmAccount();
+    } else if (action === 'acceptTerms') {
+      this.props.acceptTerms();
     }
   }
 
@@ -38,6 +40,7 @@ class AlertsComponent extends Translatable {
 AlertsComponent.propTypes = {
   list: React.PropTypes.array.isRequired,
   confirmAccount: React.PropTypes.func,
+  acceptTerms: React.PropTypes.func,
 };
 
 AlertsComponent.NAME = 'Alerts';

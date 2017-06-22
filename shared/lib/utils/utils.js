@@ -11,10 +11,10 @@ function validateParameter(parameter) {
   const value = Object.values(parameter)[0];
   let re;
   switch (key) {
-    case 'first_name':
+    case 'firstName':
       re = /^[A-Za-z0-9 ]{4,20}$/;
       break;
-    case 'last_name':
+    case 'lastName':
       re = /^[A-Za-z0-9 ]{4,20}$/;
       break;
     case 'email':

@@ -51,6 +51,10 @@ class LayoutComponent extends Panel {
     return this.props.ui.getIn(['alerts', 'activation']).toJS();
   }
 
+  get alert_list_acceptTerms() {
+    return this.props.ui.getIn(['alerts', 'acceptTerms']).toJS();
+  }
+
   get current_route() {
     return this.router.routes.getRoute(this.current_route_name);
   }
@@ -94,11 +98,14 @@ class LayoutComponent extends Panel {
         const data = JSON.parse(event.data);
         if ({}.hasOwnProperty.call(data, 'cta')) {
           layout.props.updateUI({ id: 'external_offset', data });
-          if ({}.hasOwnProperty.call(data, 'connect_to_api')) {
-            if (!layout.props.ui.getIn(['external_offset', 'connect_to_api'])) {
-              layout.props.updateUI({ id: 'connect_to_api', data: false });
-            }
+        }
+        if ({}.hasOwnProperty.call(data, 'connect_to_api')) {
+          if (!layout.props.ui.getIn(['external_offset', 'connect_to_api'])) {
+            layout.props.updateUI({ id: 'connect_to_api', data: false });
           }
+        }
+        if ({}.hasOwnProperty.call(data, 'user_session')) {
+          layout.props.storeCompetitionSession(data.user_session);
         }
       } catch (e) {
         // throw e;

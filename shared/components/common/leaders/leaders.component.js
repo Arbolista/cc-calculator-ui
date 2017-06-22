@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Panel from 'shared/lib/base_classes/panel';
-import { listLeaders, listLocations } from 'api/user.api';
+import { listLeaders, listLocations } from 'api/competition.api';
 import footprintContainer, { footprintPropTypes } from 'shared/containers/footprint.container';
 import template from './leaders.rt.html';
 import loader from './loader.rt.html';

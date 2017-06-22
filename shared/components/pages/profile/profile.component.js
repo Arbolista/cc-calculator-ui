@@ -3,7 +3,7 @@
 import React from 'react';
 import { Map, List } from 'immutable';
 import Panel from 'shared/lib/base_classes/panel';
-import { setPhoto, updateUser, updateUserGoals } from 'api/user.api';
+import { uploadImage, updateUser, updateCalculatorGoal } from 'api/competition.api';
 import profileContainer, { profilePropTypes } from 'shared/containers/profile.container';
 import template from './profile.rt.html';
 
@@ -55,7 +55,7 @@ class ProfileComponent extends Panel {
   }
 
   get full_name() {
-    return `${this.user_profile.get('first_name')} ${this.user_profile.get('last_name')}`;
+    return `${this.user_profile.get('firstName')} ${this.user_profile.get('lastName')}`;
   }
 
   get photo_is_set() {
@@ -63,24 +63,28 @@ class ProfileComponent extends Panel {
   }
 
   get photo_url() {
-    return this.state.uploaded_photo_src ? this.state.uploaded_photo_src : this.user_profile.get('photo_url');
+    return this.state.uploaded_photo_src ? this.state.uploaded_photo_src : this.user_profile.get('imageUrl');
   }
 
   get location() {
-    return `${this.user_profile.get('city')}, ${this.user_profile.get('county')}, ${this.user_profile.get('state')}`;
+    return `${this.user_profile.getIn(['location', 'city'])}, ${this.user_profile.getIn(['location', 'county'])}, ${this.user_profile.getIn(['location', 'state'])}`;
   }
 
   get social_media_platforms() {
     return SOCIAL_MEDIA_PLATFORMS;
   }
 
+  get introduction() {
+    return this.user_profile.get('introduction');
+  }
+
   get profile_data() {
-    return this.user_profile.get('profile_data');
+    return this.user_profile.get('socialMedia');
   }
 
   get user_goals() {
-    if (this.user_profile.has('user_goals') && List.isList(this.user_profile.get('user_goals'))) {
-      let user_goals = this.user_profile.get('user_goals').toJS();
+    if (this.user_profile.has('calculatorGoals') && List.isList(this.user_profile.get('calculatorGoals'))) {
+      let user_goals = this.user_profile.get('calculatorGoals').toJS();
       user_goals = user_goals.filter(key => key.status !== 'not_relevant');
       return user_goals.sort((a, b) => {
         if (a.status === 'completed') {
@@ -96,7 +100,7 @@ class ProfileComponent extends Panel {
   }
 
   get is_public() {
-    return this.state.privacy_changed ? this.state.public : this.user_profile.get('public');
+    return this.state.privacy_changed ? this.state.publicProfile : this.user_profile.get('publicProfile');
   }
 
   get show_upload_hover() {
@@ -108,13 +112,13 @@ class ProfileComponent extends Panel {
   }
 
   get is_own_editable_profile() {
-    return this.user_authenticated && (this.user_profile.get('user_id') === this.props.auth.getIn(['data', 'user_id']));
+    return this.user_authenticated && (this.user_profile.get('userId') === this.props.auth.getIn(['data', 'user_id']));
   }
 
   get profile_footprint() {
     if (this.loaded) {
       try {
-        return JSON.parse(this.user_profile.get('total_footprint'));
+        return JSON.parse(this.user_profile.get('totalFootprint'));
       } catch (e) {
         return {};
       }
@@ -133,25 +137,25 @@ class ProfileComponent extends Panel {
   }
 
   getProfileData(type) {
-    return this.state[type];
+    return this.state[type] === undefined ? this.state[type] : this.state[type].replace(this.getProfilePrefix(type), '');
   }
 
   getProfileLink(type) {
-    return `${this.getProfilePrefix(type)}${this.state[type]}`;
+    return this.state[type];
   }
 
   getProfilePrefix(type) {
     switch (type) {
       case 'facebook':
-        return 'http://facebook.com/';
+        return 'https://facebook.com/';
       case 'twitter':
-        return 'http://twitter.com/';
+        return 'https://twitter.com/';
       case 'instagram':
-        return 'http://instagram.com/';
+        return 'https://instagram.com/';
       case 'linkedin':
-        return 'http://linkedin.com/';
+        return 'https://linkedin.com/';
       case 'medium':
-        return 'http://medium.com/';
+        return 'https://medium.com/';
       default:
         break;
     }
@@ -171,8 +175,10 @@ class ProfileComponent extends Panel {
   }
 
   updateInput(event) {
+    const key = event.target.dataset.key;
+    const value = this.social_media_platforms.includes(key) ? `${this.getProfilePrefix(key)}${event.target.value}` : event.target.value;
     this.setState({
-      [event.target.dataset.key]: event.target.value,
+      [key]: value,
     });
   }
 
@@ -221,22 +227,18 @@ class ProfileComponent extends Panel {
   toggleActionComplete(action) {
     const updated_status = action.status === 'completed' ? 'pledged' : 'completed';
     const update = {
-      key: action.key,
+      calculatorKey: action.calculatorKey,
       status: updated_status,
-      details: {
-        tons_saved: parseFloat(action.tons_saved),
-        dollars_saved: parseFloat(action.dollars_saved),
-        upfront_cost: parseFloat(action.upfront_cost),
-      },
+      savings: action.savings,
     };
     this.updateRemoteUserActions(update);
   }
 
   updateRemoteUserActions(update) {
-    const token = this.props.auth.getIn(['data', 'token']);
     if (this.user_authenticated) {
-      updateUserGoals(update, token).then(() => {
-        this.props.retrieveProfile({ user_id: this.user_id, token: this.props.auth.getIn(['data', 'token']) });
+      const token = this.props.auth.getIn(['data', 'token']);
+      updateCalculatorGoal(update, token).then(() => {
+        this.props.retrieveProfile({ user_id: this.user_id, token });
       });
     }
   }
@@ -252,13 +254,16 @@ class ProfileComponent extends Panel {
         profile.setState({
           is_loading: true,
         });
-        formData.append('file', files[0]);
+        formData.append('image', files[0]);
         const token = profile.props.auth.getIn(['data', 'token']);
-        setPhoto(formData, token).then((res) => {
-          profile.setState({
-            uploaded_photo_src: res.data.photo_url,
-            file_selected: false,
-            is_loading: false,
+        uploadImage(formData, token).then((res) => {
+          const imageUrl = res[0];
+          updateUser({ imageUrl }, token).then(() => {
+            profile.setState({
+              file_selected: false,
+              is_loading: false,
+            });
+            this.props.retrieveProfile({ user_id: this.user_id, token });
           });
         });
       }
@@ -267,33 +272,36 @@ class ProfileComponent extends Panel {
 
   updatePrivacy() {
     const token = this.props.auth.getIn(['data', 'token']);
-    const is_public = this.state.privacy_changed ? !this.state.public : !this.user_profile.get('public');
+    const is_public = this.state.privacy_changed ? !this.state.publicProfile : !this.user_profile.get('publicProfile');
 
     this.setState({
-      public: !this.state.public,
+      publicProfile: !this.state.publicProfile,
       privacy_changed: true,
     });
 
-    updateUser({ public: is_public.toString() }, token);
+    updateUser({ publicProfile: is_public.toString() }, token);
   }
 
   updateProfile() {
     const profile = this;
     const token = profile.props.auth.getIn(['data', 'token']);
-    const data = {
-      facebook: this.state.facebook,
-      twitter: this.state.twitter,
-      instagram: this.state.instagram,
-      linkedin: this.state.linkedin,
-      medium: this.state.medium,
-      intro: this.state.intro,
-    };
+    const socialMedia = {};
+
+    profile.social_media_platforms.forEach((p) => {
+      const url = profile.state[p];
+      if (url && url.length > 0) {
+        socialMedia[p] = url;
+      }
+    });
+
+    const update = { socialMedia };
+    if ({}.hasOwnProperty.call(profile.state, 'intro') && profile.state.intro.length > 0) update.introduction = profile.state.intro;
 
     profile.setState({
       is_loading: true,
     });
 
-    updateUser({ profile_data: data }, token).then(() => {
+    updateUser(update, token).then(() => {
       profile.setState({
         profile_edit_active: false,
         is_loading: false,

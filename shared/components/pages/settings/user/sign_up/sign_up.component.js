@@ -13,24 +13,26 @@ class SignUpComponent extends Panel {
     super(props, context);
     const sign_up = this;
     sign_up.valid = {
-      first_name: false,
-      last_name: false,
+      firstName: false,
+      lastName: false,
       email: false,
       password: false,
       input_location: false,
+      termsAccepted: true,
     };
     sign_up.state = {
       locations: {},
       show_location_suggestions: false,
       input_location: '',
-      first_name: '',
-      last_name: '',
+      firstName: '',
+      lastName: '',
       email: '',
       password: '',
       answers: '',
       city: '',
-      location: {},
-      public: true,
+      selected_location: {},
+      publicProfile: true,
+      termsAccepted: true,
     };
   }
 
@@ -39,7 +41,7 @@ class SignUpComponent extends Panel {
   }
 
   get alert_list() {
-    return this.props.ui.getIn(['alerts', 'sign_up']).toJS();
+    return this.props.ui.getIn(['alerts', 'signup']).toJS();
   }
 
   get show_location_suggestions() {
@@ -53,6 +55,7 @@ class SignUpComponent extends Panel {
   paramValid(param) {
     const sign_up = this;
 
+    if (param === 'termsAccepted') return sign_up.valid[param];
     if (sign_up.state[param].length > 0) {
       return sign_up.valid[param];
     }
@@ -64,15 +67,18 @@ class SignUpComponent extends Panel {
     const all_valid = Object.values(sign_up.valid).filter(item => item === false);
     if (all_valid.length > 0) {
       const alerts = {
-        id: 'sign_up',
+        id: 'signup',
         data: [],
       };
       Object.keys(sign_up.valid).forEach((key) => {
         if (sign_up.valid[key] === false) {
+          const message = (key === 'termsAccepted') ? sign_up.t('sign_up.termsAccepted') : `${sign_up.t(`sign_up.${key}`)} ${sign_up.t('errors.invalid')}`;
+
           const item = {
             type: 'danger',
-            message: `${sign_up.t(`sign_up.${key}`)} ${sign_up.t('errors.invalid')}`,
+            message,
           };
+
           alerts.data.push(item);
         }
       });
@@ -95,10 +101,14 @@ class SignUpComponent extends Panel {
     sign_up.setState(update);
   }
 
-  updateCheckbox() {
+  updateCheckbox(e) {
+    const sign_up = this;
+    const key = e.target.dataset.api_key;
     this.setState({
-      public: !this.state.public,
+      [key]: !this.state[key],
     });
+
+    if (key === 'termsAccepted') sign_up.valid[key] = !this.state[key] === true;
   }
 
   submitSignup(event) {
@@ -107,16 +117,14 @@ class SignUpComponent extends Panel {
     sign_up.props.resetAlerts();
     if (sign_up.validateAll()) {
       const state_input = {
-        first_name: sign_up.state.first_name,
-        last_name: sign_up.state.last_name,
+        firstName: sign_up.state.firstName,
+        lastName: sign_up.state.lastName,
         email: sign_up.state.email,
         password: sign_up.state.password,
         answers: sign_up.state.answers,
-        city: sign_up.state.location.city,
-        county: sign_up.state.location.county,
-        state: sign_up.state.location.state,
-        country: 'us',
-        public: sign_up.state.public,
+        location: sign_up.state.selected_location,
+        publicProfile: sign_up.state.publicProfile,
+        termsAccepted: sign_up.state.termsAccepted,
       };
       sign_up.props.signup(state_input);
     }
@@ -130,11 +138,12 @@ class SignUpComponent extends Panel {
 
     const index = sign_up.state.locations.data.findIndex(l => l === zipcode);
     const location_data = sign_up.state.locations.selected_location[index];
+    location_data.country = 'us';
 
     sign_up.setState({
       show_location_suggestions: false,
       input_location: suggestion,
-      location: location_data,
+      selected_location: location_data,
     });
 
     sign_up.valid.input_location = true;

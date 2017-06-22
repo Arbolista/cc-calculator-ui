@@ -6,7 +6,7 @@
   <div className="cc-component__form">
     <Reset rt-if="this.reset_password" />
     <Login rt-if="!this.user_authenticated && !this.reset_password" />
-    <SignUp rt-if="!this.user_authenticated && !this.reset_password" />
+    <SignUp rt-if="!this.user_authenticated && !this.reset_password && !this.signed_up" />
     <Logout rt-if="this.user_authenticated && !this.reset_password" />
 
     <div rt-if="this.user_authenticated" className="panel panel-coolclimate">

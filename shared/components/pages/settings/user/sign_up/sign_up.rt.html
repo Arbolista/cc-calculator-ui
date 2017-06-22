@@ -11,24 +11,24 @@
           <form onsubmit="{this.submitSignup.bind(this)}">
             <div className="form-group">
                 <label for="inputFirst" className="control-label">
-                  {this.t('sign_up.first_name')}
+                  {this.t('sign_up.firstName')}
                 </label>
                 <input type="text" className="form-control" id="inputFirst"
-                rt-class="{error: !this.paramValid('first_name')}" onChange="{this.updateInput.bind(this)}"
-                value="{this.state.first_name}"
-                data-api_key="first_name"
-                placeholder="{this.t('sign_up.first_name')}"/>
+                rt-class="{error: !this.paramValid('firstName')}" onChange="{this.updateInput.bind(this)}"
+                value="{this.state.firstName}"
+                data-api_key="firstName"
+                placeholder="{this.t('sign_up.firstName')}"/>
             </div>
             <div className="form-group">
                 <label for="inputLast" className="control-label">
-                  {this.t('sign_up.last_name')}
+                  {this.t('sign_up.lastName')}
                 </label>
                 <input type="text" className="form-control" id="inputLast"
-                rt-class="{error: !this.paramValid('last_name')}"
+                rt-class="{error: !this.paramValid('lastName')}"
                 onChange="{this.updateInput.bind(this)}"
-                data-api_key="last_name"
-                value="{this.state.last_name}"
-                placeholder="{this.t('sign_up.last_name')}">
+                data-api_key="lastName"
+                value="{this.state.lastName}"
+                placeholder="{this.t('sign_up.lastName')}">
             </div>
             <div className="form-group">
                 <label for="inputEmail" className="control-label">
@@ -76,9 +76,20 @@
               <label>
                 <input type="checkbox"
                 onChange="{this.updateCheckbox.bind(this)}"
-                data-api_key="public"
-                checked="{this.state.public}"/> {this.t('sign_up.public')}
+                data-api_key="publicProfile"
+                checked="{this.state.publicProfile}"/> {this.t('sign_up.public')}
               </label>
+            </div>
+            <div className="checkbox">
+              <label rt-class="{error: !this.paramValid('termsAccepted')}">
+                <input type="checkbox"
+                onChange="{this.updateCheckbox.bind(this)}"
+                data-api_key="termsAccepted"
+                checked="{this.state.termsAccepted}"/> {this.t('sign_up.terms')}
+              </label>
+            </div>
+            <div className="read-terms">
+              <a href="http://coolclimate.berkeley.edu/files2/CoolClimate-terms-of-use.pdf" target="_blank">{this.t('sign_up.read_terms')}</a>
             </div>
             <div className="cc-component__auth-submit">
                 <button className="btn btn-default"

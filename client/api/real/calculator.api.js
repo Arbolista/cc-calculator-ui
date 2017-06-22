@@ -59,7 +59,8 @@ class CalculatorApi {
     });
   }
 
-    // eg: location = {input_location: 06704, input_location_mode: 1, input_income: 1, input_size: 0}
+    // eg: location = {input_location: 06704, input_location_mode: 1,
+    // input_income: 1, input_size: 0}
   static getDefaultsAndResults(location) {
     const params = Object.assign({
       op: 'get_defaults_and_results',

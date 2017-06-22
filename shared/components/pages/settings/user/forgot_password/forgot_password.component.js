@@ -68,7 +68,7 @@ class ForgotPasswordComponent extends Panel {
 
   submitForgotPassword(event) {
     event.preventDefault();
-    if (this.validateAll()) this.props.requestNewPassword(this.state);
+    if (this.validateAll()) this.props.requestNewPassword(JSON.stringify(this.state.email));
   }
 
 }

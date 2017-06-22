@@ -2,13 +2,17 @@
     "sign_up": {
         "title": "Sign up",
         "route_path": "sign_up",
-        "first_name": "First name",
-        "last_name": "Last name",
+        "firstName": "First name",
+        "lastName": "Last name",
         "email": "Email",
         "password": "Password",
         "city": "City",
         "input_location": "City",
         "public": "Yes, make my profile page public.",
+        "terms": "Yes, I accept the terms of use.",
+        "read_terms": "Read terms of use",
+        "termsAccepted": "You need to accept the terms of use to sign up.",
+        "termsNotAccepted": "You haven't accepted the terms of use. Please click the following link to accept them.",
         "enter_location": "Enter your location",
         "submit": "Sign up"
     },
@@ -4801,6 +4805,15 @@
         "password": {
             "incorrect": "Wrong password entered. Please try again."
         },
+        "loginFailed": {
+            "fail": "Login failed. Please try again.",
+            "password": "Wrong password entered. Please try again.",
+            "non-existent": "User with this email address not registered. Please sign up."
+        },
+        "forgot_passwordFailed": {
+            "fail": "Failed to request password reset link. Please try again.",
+            "non-existent": "User with this email address not registered. Please try again or sign up."
+        },
         "session": {
             "expired": "Please log in again. Your login session has expired.",
             "non-existent": "Please log in again."
@@ -4821,13 +4834,18 @@
             "not-public": "This user profile is private."
         },
         "unspecified": "not specified. Please fill out all fields.",
-        "invalid": "is not valid. Please re-type it."
+        "invalid": "is not valid. Please re-type it.",
+        "604": "Password is too short.",
+        "duplicateUser": {
+            "email": "User with this email address already exists."
+        }
     },
     "success": {
-        "sign_up": "You're now signed up and logged in!",
+        "sign_up": "You're now signed up! Login below.",
         "login": "You're now logged in!",
         "forgot_password": "Please check your emails and reset your password.",
         "logout": "You've been logged out!",
-        "answers_reset": "Your answers got reset!"
+        "answers_reset": "Your answers got reset!",
+        "termsAcceptedNow": "You have accepted the terms of use."
     }
 }

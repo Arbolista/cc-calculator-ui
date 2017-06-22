@@ -4,9 +4,8 @@ import { connect } from 'react-redux';
 import { ensureDefaults, averageFootprintUpdated } from 'shared/reducers/average_footprint/average_footprint.actions';
 import { ensureFootprintComputed, userFootprintUpdated, userFootprintReset, updatedFootprintComputed, updateTakeactionResult, updateActionStatus } from 'shared/reducers/user_footprint/user_footprint.actions';
 import { updateUI, pushAlert, resetAlerts } from 'shared/reducers/ui/ui.actions';
-import { sendEmailConfirmation } from 'shared/reducers/auth/auth.actions';
+import { sendEmailConfirmation, storeCompetitionSession, acceptTerms } from 'shared/reducers/auth/auth.actions';
 import { retrieveProfile } from 'shared/reducers/profile/profile.actions';
-
 
 const mapStateToProps = state => ({
   location: state.location,
@@ -64,9 +63,16 @@ const mapDispatchToProps = dispatch => ({
   confirmAccount: () => {
     dispatch(sendEmailConfirmation());
   },
+  acceptTerms: () => {
+    dispatch(acceptTerms());
+  },
   resetAlerts: () => {
     resetAlerts.assignTo(dispatch);
     resetAlerts();
+  },
+  storeCompetitionSession: (payload) => {
+    storeCompetitionSession.assignTo(dispatch);
+    storeCompetitionSession(payload);
   },
 });
 
@@ -92,6 +98,7 @@ const footprintPropTypes = {
   updateUI: React.PropTypes.func.isRequired,
   pushAlert: React.PropTypes.func.isRequired,
   resetAlerts: React.PropTypes.func.isRequired,
+  storeCompetitionSession: React.PropTypes.func.isRequired,
 };
 
 export default footprintContainer;
